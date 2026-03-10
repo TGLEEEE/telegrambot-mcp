@@ -181,7 +181,7 @@ LLM: [generates the report]
 
 ```bash
 # Clone and install in editable mode
-git clone https://github.com/yourusername/telegrambot-mcp
+git clone https://github.com/TGLEEEE/telegrambot-mcp
 cd telegrambot-mcp
 pip install -e ".[dev]"
 

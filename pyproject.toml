@@ -29,10 +29,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/telegrambot-mcp"
-Repository = "https://github.com/yourusername/telegrambot-mcp"
-Issues = "https://github.com/yourusername/telegrambot-mcp/issues"
-Changelog = "https://github.com/yourusername/telegrambot-mcp/releases"
+Homepage = "https://github.com/TGLEEEE/telegrambot-mcp"
+Repository = "https://github.com/TGLEEEE/telegrambot-mcp"
+Issues = "https://github.com/TGLEEEE/telegrambot-mcp/issues"
+Changelog = "https://github.com/TGLEEEE/telegrambot-mcp/releases"
 
 [project.scripts]
 telegrambot-mcp = "telegrambot_mcp.server:main"
