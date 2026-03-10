@@ -13,8 +13,6 @@ Tools:
   send_message                   — Free-form text message
   send_notification              — Structured notification with event emoji
   send_notification_with_buttons — Notification with up to 4 inline buttons
-  send_photo                     — Send an image (URL or local file path)
-  send_document                  — Send any file (URL or local file path)
   wait_for_reply                 — Block until user replies (smart polling)
 """
 
@@ -22,7 +20,6 @@ from __future__ import annotations
 
 import os
 import time
-from pathlib import Path
 from typing import Literal
 
 import httpx
@@ -82,33 +79,6 @@ def _post(method: str, payload: dict) -> dict | list:
         response = client.post(url, json=payload)
         response.raise_for_status()
         data = response.json()
-    if not data.get("ok"):
-        raise RuntimeError(
-            f"Telegram API error [{method}]: {data.get('description', 'unknown error')}"
-        )
-    return data["result"]
-
-
-def _post_file(method: str, field: str, source: str, extra: dict) -> dict:
-    """Upload a file (local path or URL) to the Telegram Bot API."""
-    url = f"{TELEGRAM_API}/bot{_token()}/{method}"
-    extra["chat_id"] = _chat_id()
-
-    if source.startswith("http://") or source.startswith("https://"):
-        # URL — Telegram fetches it directly; no upload needed.
-        extra[field] = source
-        with httpx.Client(timeout=60) as client:
-            response = client.post(url, json=extra)
-    else:
-        # Local file — upload as multipart form data.
-        path = Path(source).expanduser().resolve()
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {source}")
-        with path.open("rb") as f, httpx.Client(timeout=120) as client:
-            response = client.post(url, data=extra, files={field: (path.name, f)})
-
-    response.raise_for_status()
-    data = response.json()
     if not data.get("ok"):
         raise RuntimeError(
             f"Telegram API error [{method}]: {data.get('description', 'unknown error')}"
@@ -246,55 +216,6 @@ def send_notification_with_buttons(
         f"Notification with {len(buttons)} button(s) sent "
         f"(message_id={result['message_id']})"
     )
-
-
-@mcp.tool(
-    description=(
-        "Send an image to the configured Telegram chat.\n\n"
-        "The image is displayed inline in the chat (not as a file attachment). "
-        "Supports JPEG, PNG, GIF, WebP up to 10 MB.\n\n"
-        "Args:\n"
-        "  photo   : URL (https://...) or absolute local file path to the image.\n"
-        "  caption : Optional caption shown below the image. Markdown supported."
-    )
-)
-def send_photo(
-    photo: str,
-    caption: str = "",
-) -> str:
-    """Send an image by URL or local file path."""
-    extra: dict = {}
-    if caption:
-        extra["caption"] = caption
-        extra["parse_mode"] = "Markdown"
-
-    result = _post_file("sendPhoto", "photo", photo, extra)
-    return f"Photo sent (message_id={result['message_id']})"
-
-
-@mcp.tool(
-    description=(
-        "Send any file as a document attachment to the configured Telegram chat.\n\n"
-        "Use this for PDFs, CSVs, logs, ZIPs, code files, or any binary/text file. "
-        "The file appears as a downloadable attachment (not inline). "
-        "Max file size: 50 MB.\n\n"
-        "Args:\n"
-        "  document : URL (https://...) or absolute local file path to the file.\n"
-        "  caption  : Optional caption shown with the attachment. Markdown supported."
-    )
-)
-def send_document(
-    document: str,
-    caption: str = "",
-) -> str:
-    """Send a file by URL or local file path."""
-    extra: dict = {}
-    if caption:
-        extra["caption"] = caption
-        extra["parse_mode"] = "Markdown"
-
-    result = _post_file("sendDocument", "document", document, extra)
-    return f"Document sent (message_id={result['message_id']})"
 
 
 @mcp.tool(
