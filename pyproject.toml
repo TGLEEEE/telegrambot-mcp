@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "telegrambot-mcp"
-version = "0.1.4"
+name = "tgbot-mcp"
+version = "0.1.0"
 description = "A trusted, open-source Telegram MCP server — bot token auth only, no personal account access"
 readme = "README.md"
 license = { text = "MIT" }
@@ -29,16 +29,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/TGLEEEE/telegrambot-mcp"
-Repository = "https://github.com/TGLEEEE/telegrambot-mcp"
-Issues = "https://github.com/TGLEEEE/telegrambot-mcp/issues"
-Changelog = "https://github.com/TGLEEEE/telegrambot-mcp/releases"
+Homepage = "https://github.com/TGLEEEE/tgbot-mcp"
+Repository = "https://github.com/TGLEEEE/tgbot-mcp"
+Issues = "https://github.com/TGLEEEE/tgbot-mcp/issues"
+Changelog = "https://github.com/TGLEEEE/tgbot-mcp/releases"
 
 [project.scripts]
-telegrambot-mcp = "telegrambot_mcp.server:main"
+tgbot-mcp = "tgbot_mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/telegrambot_mcp"]
+packages = ["src/tgbot_mcp"]
 
 [tool.hatch.build.targets.sdist]
 include = [

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-telegrambot-mcp — Telegram MCP Server
+tgbot-mcp — Telegram MCP Server
 ======================================
 A trusted, open-source MCP server for Telegram using **bot token authentication only**.
 No personal account access. No proprietary backend.
@@ -30,10 +30,10 @@ from fastmcp import FastMCP
 # ---------------------------------------------------------------------------
 
 mcp = FastMCP(
-    "telegrambot-mcp",
+    "tgbot-mcp",
     instructions=(
-        "Telegram bot MCP server (telegrambot-mcp). "
-        "Use these tools to send messages, notifications, photos, and files "
+        "Telegram bot MCP server (tgbot-mcp). "
+        "Use these tools to send messages and notifications "
         "via Telegram and to wait for replies from the user.\n\n"
         "wait_for_reply captures BOTH button taps AND free-form typed messages — "
         "no prefix required. Users can always ignore buttons and just type freely.\n\n"
@@ -227,13 +227,14 @@ def send_notification_with_buttons(
         "  10 min – 1 hr       →  poll every 60 s\n"
         "  1 hr+               →  poll every 120 s\n\n"
         "LLM guidelines for choosing max_wait_seconds:\n"
-        "  Simple yes/no or quick question  →  300    (5 min)\n"
-        "  General task approval            →  1 800  (30 min)  ← default\n"
-        "  Stock price / alert trigger      →  1 800  (30 min)\n"
-        "  End-of-day review                →  7 200  (2 hr)\n"
-        "  Overnight / long-running job     →  21 600 (6 hr)  ← maximum\n\n"
+        "  Simple yes/no or quick question  →  300     (5 min)\n"
+        "  General task approval            →  1 800   (30 min)  ← default\n"
+        "  Stock price / alert trigger      →  1 800   (30 min)\n"
+        "  End-of-day review                →  7 200   (2 hr)\n"
+        "  Overnight / long-running job     →  86 400  (24 hr)\n"
+        "  Multi-day wait                   →  any value — no maximum\n\n"
         "Args:\n"
-        "  max_wait_seconds : How long to wait. Default 1800, maximum 21600. "
+        "  max_wait_seconds : How long to wait. Default 1800, no upper limit. "
                               "Pick a value appropriate to how soon a reply is expected."
     )
 )
@@ -241,7 +242,7 @@ def wait_for_reply(max_wait_seconds: int = 1800) -> str:
     """Block until the user replies or the timeout expires."""
     global _last_update_id
 
-    max_wait_seconds = max(1, min(max_wait_seconds, 21_600))
+    max_wait_seconds = max(1, max_wait_seconds)
     start = time.monotonic()
 
     # Prime the offset: ignore messages that arrived before this call.

@@ -1,7 +1,7 @@
-# telegrambot-mcp
+# tgbot-mcp
 
-[![PyPI version](https://img.shields.io/pypi/v/telegrambot-mcp)](https://pypi.org/project/telegrambot-mcp/)
-[![Python](https://img.shields.io/pypi/pyversions/telegrambot-mcp)](https://pypi.org/project/telegrambot-mcp/)
+[![PyPI version](https://img.shields.io/pypi/v/tgbot-mcp)](https://pypi.org/project/tgbot-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/tgbot-mcp)](https://pypi.org/project/tgbot-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A **trusted, open-source** [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for Telegram.
@@ -36,7 +36,7 @@ Built as a clean alternative to closed-source or opaque Telegram MCP packages â€
 ### 2. Install
 
 ```bash
-pip install telegrambot-mcp
+pip install tgbot-mcp
 ```
 
 ### 3. Set Environment Variables
@@ -53,8 +53,8 @@ Add the following to your MCP client configuration (e.g. `claude_desktop_config.
 ```json
 {
   "mcpServers": {
-    "telegrambot-mcp": {
-      "command": "telegrambot-mcp",
+    "tgbot-mcp": {
+      "command": "tgbot-mcp",
       "env": {
         "TELEGRAM_BOT_TOKEN": "YOUR_BOT_TOKEN",
         "TELEGRAM_CHAT_ID": "YOUR_CHAT_ID"
@@ -67,7 +67,7 @@ Add the following to your MCP client configuration (e.g. `claude_desktop_config.
 Or run directly:
 
 ```bash
-TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... telegrambot-mcp
+TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... tgbot-mcp
 ```
 
 ---
@@ -181,12 +181,12 @@ LLM: [generates the report]
 
 ```bash
 # Clone and install in editable mode
-git clone https://github.com/TGLEEEE/telegrambot-mcp
-cd telegrambot-mcp
+git clone https://github.com/TGLEEEE/tgbot-mcp
+cd tgbot-mcp
 pip install -e ".[dev]"
 
 # Run directly
-TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... python -m telegrambot_mcp.server
+TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... python -m tgbot_mcp.server
 ```
 
 ---
