@@ -127,9 +127,9 @@ Send a notification with up to **4 inline action buttons**. Ideal when you want 
 
 Block until the user replies (text message or button tap) or the timeout expires.
 
-| Parameter           | Type  | Default | Max    | Description                         |
-|---------------------|-------|---------|--------|-------------------------------------|
-| `max_wait_seconds`  | `int` | `1800`  | `21600`| How long to wait for a reply.       |
+| Parameter           | Type  | Default | Max      | Description                         |
+|---------------------|-------|---------|----------|-------------------------------------|
+| `max_wait_seconds`  | `int` | `1800`  | no limit | How long to wait for a reply.       |
 
 **Smart polling schedule:**
 
@@ -141,13 +141,14 @@ Block until the user replies (text message or button tap) or the timeout expires
 
 **LLM guidelines for `max_wait_seconds`:**
 
-| Scenario                        | Recommended value |
-|---------------------------------|-------------------|
-| Simple yes/no question          | `300` (5 min)     |
-| General task approval           | `1800` (30 min) ✓ |
-| Stock price / event alert       | `1800` (30 min)   |
-| End-of-day review               | `7200` (2 hr)     |
-| Overnight / long-running job    | `21600` (6 hr)    |
+| Scenario                        | Recommended value      |
+|---------------------------------|------------------------|
+| Simple yes/no question          | `300` (5 min)          |
+| General task approval           | `1800` (30 min) ✓      |
+| Stock price / event alert       | `1800` (30 min)        |
+| End-of-day review               | `7200` (2 hr)          |
+| Overnight / long-running job    | `86400` (24 hr)        |
+| Multi-day wait                  | any value — no limit   |
 
 ---
 
