@@ -10,16 +10,19 @@ Required environment variables:
   TELEGRAM_CHAT_ID    — Target chat ID (user, group, or channel)
 
 Tools:
-  send_message                  — Free-form text message
-  send_notification             — Structured notification with event emoji
+  send_message                   — Free-form text message
+  send_notification              — Structured notification with event emoji
   send_notification_with_buttons — Notification with up to 4 inline buttons
-  wait_for_reply                — Block until user replies (smart polling)
+  send_photo                     — Send an image (URL or local file path)
+  send_document                  — Send any file (URL or local file path)
+  wait_for_reply                 — Block until user replies (smart polling)
 """
 
 from __future__ import annotations
 
 import os
 import time
+from pathlib import Path
 from typing import Literal
 
 import httpx
@@ -33,7 +36,7 @@ mcp = FastMCP(
     "telegrambot-mcp",
     instructions=(
         "Telegram bot MCP server (telegrambot-mcp). "
-        "Use these tools to send messages and notifications "
+        "Use these tools to send messages, notifications, photos, and files "
         "via Telegram and to wait for replies from the user.\n\n"
         "wait_for_reply captures BOTH button taps AND free-form typed messages — "
         "no prefix required. Users can always ignore buttons and just type freely.\n\n"
@@ -73,12 +76,39 @@ def _chat_id() -> str:
 
 
 def _post(method: str, payload: dict) -> dict | list:
-    """Send a request to the Telegram Bot API and return the result."""
+    """Send a JSON request to the Telegram Bot API and return the result."""
     url = f"{TELEGRAM_API}/bot{_token()}/{method}"
     with httpx.Client(timeout=35) as client:
         response = client.post(url, json=payload)
         response.raise_for_status()
         data = response.json()
+    if not data.get("ok"):
+        raise RuntimeError(
+            f"Telegram API error [{method}]: {data.get('description', 'unknown error')}"
+        )
+    return data["result"]
+
+
+def _post_file(method: str, field: str, source: str, extra: dict) -> dict:
+    """Upload a file (local path or URL) to the Telegram Bot API."""
+    url = f"{TELEGRAM_API}/bot{_token()}/{method}"
+    extra["chat_id"] = _chat_id()
+
+    if source.startswith("http://") or source.startswith("https://"):
+        # URL — Telegram fetches it directly; no upload needed.
+        extra[field] = source
+        with httpx.Client(timeout=60) as client:
+            response = client.post(url, json=extra)
+    else:
+        # Local file — upload as multipart form data.
+        path = Path(source).expanduser().resolve()
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {source}")
+        with path.open("rb") as f, httpx.Client(timeout=120) as client:
+            response = client.post(url, data=extra, files={field: (path.name, f)})
+
+    response.raise_for_status()
+    data = response.json()
     if not data.get("ok"):
         raise RuntimeError(
             f"Telegram API error [{method}]: {data.get('description', 'unknown error')}"
@@ -129,23 +159,27 @@ def send_message(
 @mcp.tool(
     description=(
         "Send a structured notification to the configured Telegram chat.\n\n"
-        "Automatically prepends an event emoji for quick visual scanning:\n"
+        "Automatically prepends an emoji for quick visual scanning. "
+        "Default emojis by event type:\n"
         "  completed → ✅   error → ❌   progress → 🔄   question → ❓\n\n"
-        "Prefer this over send_message when you want consistent, "
-        "easy-to-read notification formatting.\n\n"
+        "Override the default emoji with the icon parameter when the context calls "
+        "for something more specific (e.g. icon='🚀' for a deployment, "
+        "'🧪' for a test run, '📊' for a report).\n\n"
         "Args:\n"
         "  event   : Event type — 'completed', 'error', 'progress', or 'question'.\n"
         "  summary : One-line summary shown prominently (≤200 chars recommended).\n"
-        "  details : Optional multi-line body — stack traces, next steps, metrics, etc."
+        "  details : Optional multi-line body — stack traces, next steps, metrics, etc.\n"
+        "  icon    : Optional emoji to override the default event icon."
     )
 )
 def send_notification(
     event: Literal["completed", "error", "progress", "question"],
     summary: str,
     details: str = "",
+    icon: str = "",
 ) -> str:
     """Send a structured event notification."""
-    emoji = _EVENT_EMOJI.get(event, "ℹ️")
+    emoji = icon.strip() or _EVENT_EMOJI.get(event, "ℹ️")
     parts = [f"{emoji} *{summary}*"]
     if details:
         parts.append(f"\n{details}")
@@ -171,7 +205,8 @@ def send_notification(
         "  summary : One-line summary (≤200 chars).\n"
         "  buttons : List of 1–4 button label strings. "
                     "Each label becomes the button text AND the callback payload.\n"
-        "  details : Optional additional context or instructions for the user."
+        "  details : Optional additional context or instructions for the user.\n"
+        "  icon    : Optional emoji to override the default event icon."
     )
 )
 def send_notification_with_buttons(
@@ -179,6 +214,7 @@ def send_notification_with_buttons(
     summary: str,
     buttons: list[str],
     details: str = "",
+    icon: str = "",
 ) -> str:
     """Send a notification with up to 4 inline keyboard buttons."""
     if not buttons:
@@ -186,7 +222,7 @@ def send_notification_with_buttons(
     if len(buttons) > 4:
         raise ValueError("A maximum of 4 buttons is allowed.")
 
-    emoji = _EVENT_EMOJI.get(event, "ℹ️")
+    emoji = icon.strip() or _EVENT_EMOJI.get(event, "ℹ️")
     parts = [f"{emoji} *{summary}*"]
     if details:
         parts.append(f"\n{details}")
@@ -210,6 +246,55 @@ def send_notification_with_buttons(
         f"Notification with {len(buttons)} button(s) sent "
         f"(message_id={result['message_id']})"
     )
+
+
+@mcp.tool(
+    description=(
+        "Send an image to the configured Telegram chat.\n\n"
+        "The image is displayed inline in the chat (not as a file attachment). "
+        "Supports JPEG, PNG, GIF, WebP up to 10 MB.\n\n"
+        "Args:\n"
+        "  photo   : URL (https://...) or absolute local file path to the image.\n"
+        "  caption : Optional caption shown below the image. Markdown supported."
+    )
+)
+def send_photo(
+    photo: str,
+    caption: str = "",
+) -> str:
+    """Send an image by URL or local file path."""
+    extra: dict = {}
+    if caption:
+        extra["caption"] = caption
+        extra["parse_mode"] = "Markdown"
+
+    result = _post_file("sendPhoto", "photo", photo, extra)
+    return f"Photo sent (message_id={result['message_id']})"
+
+
+@mcp.tool(
+    description=(
+        "Send any file as a document attachment to the configured Telegram chat.\n\n"
+        "Use this for PDFs, CSVs, logs, ZIPs, code files, or any binary/text file. "
+        "The file appears as a downloadable attachment (not inline). "
+        "Max file size: 50 MB.\n\n"
+        "Args:\n"
+        "  document : URL (https://...) or absolute local file path to the file.\n"
+        "  caption  : Optional caption shown with the attachment. Markdown supported."
+    )
+)
+def send_document(
+    document: str,
+    caption: str = "",
+) -> str:
+    """Send a file by URL or local file path."""
+    extra: dict = {}
+    if caption:
+        extra["caption"] = caption
+        extra["parse_mode"] = "Markdown"
+
+    result = _post_file("sendDocument", "document", document, extra)
+    return f"Document sent (message_id={result['message_id']})"
 
 
 @mcp.tool(
