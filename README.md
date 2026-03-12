@@ -33,20 +33,7 @@ Built as a clean alternative to closed-source or opaque Telegram MCP packages â€
    ```
    Send any message to the bot and look for `"chat":{"id":...}` â€” that is your **chat ID**.
 
-### 2. Install
-
-```bash
-pip install tgbot-mcp
-```
-
-### 3. Set Environment Variables
-
-```bash
-export TELEGRAM_BOT_TOKEN="123456:ABC-DEF..."
-export TELEGRAM_CHAT_ID="987654321"
-```
-
-### 4. Register with Your MCP Client
+### 2. Register with Your MCP Client
 
 Add the following to your MCP client configuration (e.g. `claude_desktop_config.json`):
 
@@ -54,7 +41,8 @@ Add the following to your MCP client configuration (e.g. `claude_desktop_config.
 {
   "mcpServers": {
     "tgbot-mcp": {
-      "command": "tgbot-mcp",
+      "command": "uvx",
+      "args": ["tgbot-mcp"],
       "env": {
         "TELEGRAM_BOT_TOKEN": "YOUR_BOT_TOKEN",
         "TELEGRAM_CHAT_ID": "YOUR_CHAT_ID"
@@ -64,11 +52,17 @@ Add the following to your MCP client configuration (e.g. `claude_desktop_config.
 }
 ```
 
-Or run directly:
+[`uvx`](https://docs.astral.sh/uv/) runs the server directly from PyPI without a separate install step. If you don't have `uv` yet:
 
 ```bash
-TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... tgbot-mcp
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
+> **Alternatively**, install manually and run with `pip`:
+> ```bash
+> pip install tgbot-mcp
+> ```
+> Then use `"command": "tgbot-mcp"` (without `uvx`) in the config above.
 
 ---
 
